@@ -1,0 +1,49 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
+require 'bundler'
+Bundler.require # removes need for 'bundle exec'
+
+require 'riak'
+require 'yajl'
+
+$stdout.sync = true
+Riak.disable_list_keys_warnings = true
+
+riak_client = Riak::Client.new(:protocol => "pbc")
+bucket = riak_client.bucket("tweets")
+
+count = 0
+begin
+  bucket.keys do |keyary|
+    keyary.each do |key|
+      puts("Updating #{key}")
+      tweet_obj = bucket.get(key)
+
+      if tweet_obj.conflict?
+        puts("#{key} -> conflict")
+      else
+        tweet_obj.content_type = "application/json"
+
+        begin
+          tweet_json = Yajl::Parser.parse(tweet_obj.raw_data)
+          tweet_json['modified_at'] = Time.now
+          tweet_obj.raw_data = Yajl::Encoder.encode(tweet_json)
+          tweet_obj.store
+          count += 1
+        rescue => e
+          puts("#{key} -> deleting parse ex #{e}")
+          bucket.delete(key)
+        end
+      end
+
+    end
+  end
+rescue Interrupt
+  puts("Exiting!")
+rescue => e
+  $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+end
+
+puts("Updated #{count} keys")
+

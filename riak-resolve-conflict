@@ -1,0 +1,29 @@
+#!/usr/bin/env ruby
+# encoding: UTF-8
+
+$LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
+require 'bundler'
+Bundler.require # removes need for 'bundle exec'
+
+require 'riak'
+require 'yajl'
+
+$stdout.sync = true
+Riak.disable_list_keys_warnings = true
+
+riak_client = Riak::Client.new(:protocol => "pbc")
+bucket = riak_client.bucket("tweets")
+
+key = 392465748095819778
+
+begin
+  obj = bucket.get(key.to_s)
+  obj.siblings.each do |s|
+    puts s.inspect
+  end
+rescue Interrupt
+  puts("Exiting!")
+rescue => e
+  $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+end
+

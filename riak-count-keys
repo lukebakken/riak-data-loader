@@ -1,0 +1,26 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
+require 'bundler'
+Bundler.require # removes need for 'bundle exec'
+
+require 'riak'
+
+$stdout.sync = true
+Riak.disable_list_keys_warnings = true
+
+riak_client = Riak::Client.new(:protocol => "pbc")
+bucket = riak_client.bucket("tweets")
+
+count = 0
+begin
+  bucket.keys do |keyary|
+    count += keyary.length
+  end
+rescue Interrupt
+  puts("Exiting!")
+rescue => e
+  $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+end
+
+puts("Key count: #{count}")
