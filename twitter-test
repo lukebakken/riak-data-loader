@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
+require 'bundler'
+Bundler.require # removes need for 'bundle exec'
+
+require 'twitter_auth'
+require 'twitter'
+require 'yajl'
+
+begin
+  object_count = Integer(ARGV[0])
+rescue ArgumentError, TypeError
+  object_count = 1024
+end
+
+client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
+  twauth                     = TwitterAuth.new
+  config.consumer_key        = twauth.consumer_key
+  config.consumer_secret     = twauth.consumer_secret
+  config.access_token        = twauth.access_token
+  config.access_token_secret = twauth.access_token_secret
+end
+
+
+stored = 0
+begin
+  client.sample do |data|
+    puts(Yajl::Encoder.encode(data))
+  end
+rescue Interrupt
+  puts("Exiting!")
+rescue => e
+  $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+end
+

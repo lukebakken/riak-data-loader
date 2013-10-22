@@ -1,0 +1,64 @@
+#!/usr/bin/env ruby
+
+# Run first:
+# curl -i -XPUT http://localhost:8098/yz/index/tweets -H 'Content-Type: application/json'
+# curl -XPUT -i -H 'Content-Type: application/json' 'http://localhost:8098/buckets/tweets/props' -d '{"props":{"yz_index":"tweets"}}'
+
+$LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
+require 'bundler'
+Bundler.require # removes need for 'bundle exec'
+
+require 'twitter_auth'
+require 'twitter'
+require 'riak'
+
+begin
+  object_count = Integer(ARGV[0])
+rescue ArgumentError, TypeError
+  object_count = 1024
+end
+
+client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
+  twauth                     = TwitterAuth.new
+  config.consumer_key        = twauth.consumer_key
+  config.consumer_secret     = twauth.consumer_secret
+  config.access_token        = twauth.access_token
+  config.access_token_secret = twauth.access_token_secret
+end
+
+riak_client = Riak::Client.new(:protocol => "pbc")
+bucket = riak_client.bucket("tweets")
+
+id_regex = /"id":(\d+),/
+stored = 0
+begin
+  done = false
+  client.sample do |json|
+    
+    id_regex.match(json) do |m|
+
+      id = m[1]
+
+      tweet_obj = Riak::RObject.new(bucket, id)
+      tweet_obj.content_type = "application/json"
+      tweet_obj.raw_data = json
+      tweet_obj.store
+
+      stored += 1
+      if (stored % 64 == 0)
+        puts("Stored #{stored} objects")
+      end
+
+      done = true if stored > object_count
+
+    end
+
+    break if done
+
+  end
+rescue Interrupt
+  puts("Exiting!")
+rescue => e
+  $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+end
+
