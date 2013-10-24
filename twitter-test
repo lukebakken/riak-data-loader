@@ -8,6 +8,8 @@ require 'twitter_auth'
 require 'twitter'
 require 'yajl'
 
+$stdout.sync = true
+
 begin
   object_count = Integer(ARGV[0])
 rescue ArgumentError, TypeError
@@ -22,19 +24,22 @@ client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
+first = true
 delete_regex = /^{"delete":/
-stored = 0
 begin
+  $stdout.puts("[")
   client.sample do |data|
     unless delete_regex.match(data)
       Yajl::Parser.parse(data) do |parsed|
+        $stdout.puts(",") unless first
+        first = false if first
         Yajl::Encoder.encode(parsed, $stdout, :pretty => true)
       end
     end
   end
 rescue Interrupt
-  puts("Exiting!")
+  $stdout.puts("]")
+  $stderr.puts("Exiting!")
 rescue => e
   $stderr.puts("Exception: #{e}\n#{e.backtrace}")
 end
-
