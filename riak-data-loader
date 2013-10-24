@@ -1,13 +1,15 @@
 #!/usr/bin/env ruby
 
 # Run first:
-# curl -i -XPUT http://localhost:8098/yz/index/tweets -H 'Content-Type: application/json'
-# curl -XPUT -i -H 'Content-Type: application/json' 'http://localhost:8098/buckets/tweets/props' -d '{"props":{"yz_index":"tweets"}}'
+# curl -XPUT -iH 'Content-Type: application/xml' 'http://localhost:8098/yz/schema/tweets-sch' --data-binary @twitter-schema.xml
+# curl -XPUT -iH 'Content-Type: application/json' http://localhost:8098/yz/index/tweets-idx
+# curl -XPUT -iH 'Content-Type: application/json' 'http://localhost:8098/buckets/tweets/props' -d '{"props":{"yz_index":"tweets-idx"}}'
 
 $LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
 require 'bundler'
 Bundler.require # removes need for 'bundle exec'
 
+require 'yajl'
 require 'twitter_auth'
 require 'twitter'
 require 'riak'
@@ -31,34 +33,24 @@ bucket = riak_client.bucket("tweets")
 
 # {\"delete\"
 delete_regex = /^{"delete":/
-
 id_regex = /"id":(\d+),/
 stored = 0
 begin
-  done = false
   client.sample do |json|
-
     unless delete_regex.match(json)
       id_regex.match(json) do |m|
-
         id = m[1]
-
-        tweet_obj = Riak::RObject.new(bucket, id)
+        tweet_obj = Riak::RObject.new(bucket, id.to_s)
         tweet_obj.content_type = "application/json"
         tweet_obj.raw_data = json
         tweet_obj.store
-
         stored += 1
         if (stored % 64 == 0)
           puts("Stored #{stored} objects")
         end
-
-        done = true if stored > object_count
       end
     end
-
-    break if done
-
+    break if stored > object_count
   end
 rescue Interrupt
   puts("Exiting!")
