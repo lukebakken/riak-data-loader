@@ -22,10 +22,14 @@ client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
-
+delete_regex = /^{"delete":/
 stored = 0
 begin
   client.sample do |data|
+    if delete_regex.match(data)
+      puts("delete: skipping")
+      next
+    end
     puts(Yajl::Encoder.encode(data))
   end
 rescue Interrupt

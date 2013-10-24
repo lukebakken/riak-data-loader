@@ -29,28 +29,32 @@ end
 riak_client = Riak::Client.new(:protocol => "pbc")
 bucket = riak_client.bucket("tweets")
 
+# {\"delete\"
+delete_regex = /^{"delete":/
+
 id_regex = /"id":(\d+),/
 stored = 0
 begin
   done = false
   client.sample do |json|
-    
-    id_regex.match(json) do |m|
 
-      id = m[1]
+    unless delete_regex.match(json)
+      id_regex.match(json) do |m|
 
-      tweet_obj = Riak::RObject.new(bucket, id)
-      tweet_obj.content_type = "application/json"
-      tweet_obj.raw_data = json
-      tweet_obj.store
+        id = m[1]
 
-      stored += 1
-      if (stored % 64 == 0)
-        puts("Stored #{stored} objects")
+        tweet_obj = Riak::RObject.new(bucket, id)
+        tweet_obj.content_type = "application/json"
+        tweet_obj.raw_data = json
+        tweet_obj.store
+
+        stored += 1
+        if (stored % 64 == 0)
+          puts("Stored #{stored} objects")
+        end
+
+        done = true if stored > object_count
       end
-
-      done = true if stored > object_count
-
     end
 
     break if done
@@ -60,5 +64,6 @@ rescue Interrupt
   puts("Exiting!")
 rescue => e
   $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+  retry
 end
 
