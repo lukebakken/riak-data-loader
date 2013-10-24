@@ -26,11 +26,11 @@ delete_regex = /^{"delete":/
 stored = 0
 begin
   client.sample do |data|
-    if delete_regex.match(data)
-      puts("delete: skipping")
-      next
+    unless delete_regex.match(data)
+      Yajl::Parser.parse(data) do |parsed|
+        Yajl::Encoder.encode(parsed, $stdout, :pretty => true)
+      end
     end
-    puts(Yajl::Encoder.encode(data))
   end
 rescue Interrupt
   puts("Exiting!")
