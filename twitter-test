@@ -7,13 +7,14 @@ Bundler.require # removes need for 'bundle exec'
 require 'twitter_auth'
 require 'twitter'
 require 'yajl'
+require 'time'
 
 $stdout.sync = true
 
 begin
   object_count = Integer(ARGV[0])
 rescue ArgumentError, TypeError
-  object_count = 1024
+  object_count = 8
 end
 
 client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
@@ -24,19 +25,33 @@ client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
-first = true
-delete_regex = /^{"delete":/
+shown = 0
 begin
+
   $stdout.puts("[")
+
   client.sample do |data|
-    unless delete_regex.match(data)
-      Yajl::Parser.parse(data) do |parsed|
-        $stdout.puts(",") unless first
-        first = false if first
-        Yajl::Encoder.encode(parsed, $stdout, :pretty => true)
+    Yajl::Parser.parse(data, :symbolize_keys => true) do |parsed|
+      unless parsed[:delete]
+
+        created_at = Time.parse(parsed[:created_at])
+        # puts("ID: #{parsed[:id]} Created At: #{created_at.utc.xmlschema}")
+
+        parsed[:created_at] = created_at.utc.xmlschema.to_s
+
+        Yajl::Encoder.encode(parsed, $stdout, :pretty => false)
+
+        shown += 1
+        if shown >= object_count
+          $stdout.puts("\n]")
+          exit 0
+        else
+          $stdout.puts(",")
+        end
       end
     end
   end
+
 rescue Interrupt
   $stdout.puts("]")
   $stderr.puts("Exiting!")
