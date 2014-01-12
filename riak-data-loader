@@ -1,9 +1,6 @@
 #!/usr/bin/env ruby
 
-# Run first:
-# curl -XPUT -iH 'Content-Type: application/xml' 'http://localhost:8098/yz/schema/tweets-sch' --data-binary @twitter-schema.xml
-# curl -XPUT -iH 'Content-Type: application/json' http://localhost:8098/yz/index/tweets-idx -d '{"schema":"tweets-sch"}'
-# curl -XPUT -iH 'Content-Type: application/json' 'http://localhost:8098/buckets/tweets/props' -d '{"props":{"yz_index":"tweets-idx"}}'
+# Run tweets-idx-setup.sh first!
 
 $LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
 require 'bundler'
@@ -21,7 +18,7 @@ rescue ArgumentError, TypeError
   object_count = 1024
 end
 
-client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
+client = Twitter::Streaming::Client.new() do |config|
   twauth                     = TwitterAuth.new
   config.consumer_key        = twauth.consumer_key
   config.consumer_secret     = twauth.consumer_secret
@@ -29,28 +26,30 @@ client = Twitter::Streaming::Client.new(:raw_data => true) do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
-riak_client = Riak::Client.new(:protocol => "pbc")
-bucket = riak_client.bucket("tweets")
+riak_client = Riak::Client.new()
+
+# TODO TODO BUCKET TYPES
+bucket = riak_client.bucket('{"tweets-type", "tweets" }')
 
 stored = 0
 begin
-  client.sample do |data|
-    Yajl::Parser.parse(data, :symbolize_keys => true) do |parsed|
-      unless parsed[:delete]
-        id = parsed[:id].to_s
+  client.sample do |object|
+    if object.is_a?(Twitter::Tweet)
 
-        created_at = Time.parse(parsed[:created_at])
-        parsed[:created_at] = created_at.utc.xmlschema.to_s
+      obj_h = object.to_h
+      id_s = object[:id].to_s
+      obj_h[:created_at] = object.created_at.dup.utc.xmlschema.to_s
 
-        tweet_obj = Riak::RObject.new(bucket, id)
-        tweet_obj.content_type = "application/json"
-        tweet_obj.raw_data = Yajl::Encoder.encode(parsed)
-        tweet_obj.store
+      obj_json = Yajl::Encoder.encode(obj_h)
 
-        stored += 1
-        if (stored % 64 == 0)
-          puts("Stored #{stored} objects")
-        end
+      tweet_obj = Riak::RObject.new(bucket, id_s)
+      tweet_obj.content_type = "application/json"
+      tweet_obj.raw_data = obj_json
+      tweet_obj.store
+
+      stored += 1
+      if (stored % 64 == 0)
+        puts("Stored #{stored} objects")
       end
     end
     break if stored >= object_count

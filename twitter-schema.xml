@@ -7,7 +7,7 @@
     <field name="created_at" type="tdate" indexed="true" stored="true" multiValued="false"/>
     <field name="id" type="tlong" indexed="true" stored="true" required="true"/>
     <field name="text" type="text_general" indexed="true" stored="true" required="true" multiValued="false"/>
-    <field name="user_screen_name" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
+    <field name="user.screen_name" type="string" indexed="true" stored="true" required="true" multiValued="false"/>
     <field name="in_reply_to_status_id" type="tlong" indexed="true" stored="true" required="false"/>
     <field name="in_reply_to_user_id" type="tlong" indexed="true" stored="true" required="false"/>
     <field name="in_reply_to_screen_name" type="string" indexed="true" stored="true" required="false" multiValued="false"/>
@@ -24,6 +24,8 @@
     <field name="_yz_node" type="_yz_str" indexed="true" stored="false"/>
     <field name="_yz_rk" type="_yz_str" indexed="true" stored="true"/>
     <field name="_yz_rb" type="_yz_str" indexed="true" stored="true"/>
+    <field name="_yz_rt" type="_yz_str" indexed="true" stored="true"/>
+    <field name="_yz_err" type="_yz_str" indexed="true"/>
    <!-- catch-all field -->
    <dynamicField name="*" type="ignored" indexed="false" stored="false" multiValued="true" />
   </fields>

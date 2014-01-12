@@ -1,20 +1,21 @@
 #!/usr/bin/env ruby
 
+# Run tweets-idx-setup.sh first!
+
 $LOAD_PATH.unshift(File.join(File.expand_path(File.dirname(__FILE__)), 'lib'))
 require 'bundler'
 Bundler.require # removes need for 'bundle exec'
 
+require 'tempfile'
+require 'yajl'
 require 'twitter_auth'
 require 'twitter'
-require 'yajl'
 require 'time'
-
-$stdout.sync = true
 
 begin
   object_count = Integer(ARGV[0])
 rescue ArgumentError, TypeError
-  object_count = 8
+  object_count = 1024
 end
 
 client = Twitter::Streaming::Client.new() do |config|
@@ -25,11 +26,8 @@ client = Twitter::Streaming::Client.new() do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
-shown = 0
+stored = 0
 begin
-
-  $stdout.puts("[")
-
   client.sample do |object|
     if object.is_a?(Twitter::Tweet)
 
@@ -37,22 +35,32 @@ begin
       id_s = object[:id].to_s
       obj_h[:created_at] = object.created_at.dup.utc.xmlschema.to_s
 
-      Yajl::Encoder.encode(obj_h, $stdout, :pretty => false)
+      obj_json = Yajl::Encoder.encode(obj_h)
 
-      shown += 1
-      if shown >= object_count
-        $stdout.puts("\n]")
-        exit 0
-      else
-        $stdout.puts(",")
+      file = Tempfile.new('riak-data-loader.', :encoding => 'utf-8')
+      begin
+        file.puts(obj_json)
+        file.flush
+        file.fsync
+        curl_cmd = ['curl', '-H', 'Content-type: application/json', '-X', 'POST',
+                    "http://localhost:8098/types/tweets-type/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
+        system(*curl_cmd)
+      ensure
+        file.close
+        file.unlink
+      end
+
+      stored += 1
+      if (stored % 64 == 0)
+        puts("Stored #{stored} objects")
       end
     end
+    break if stored >= object_count
   end
-
 rescue Interrupt
-  $stdout.puts("]")
-  $stderr.puts("Exiting!")
+  puts("Exiting!")
 rescue => e
   $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+  retry
 end
 
