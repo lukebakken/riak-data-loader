@@ -17,5 +17,3 @@ curl -XPUT -iH 'Content-Type: application/json' http://localhost:8098/search/ind
 
 riak-admin bucket-type create tweets-type '{"props":{"search_index":"tweets-idx"}}'
 riak-admin bucket-type activate tweets-type
-
-# curl -iH 'Content-Type: application/json' -XPUT 'http://localhost:8098/types/tweets-type/props' --data-binary @tweets-bucket-type.json
