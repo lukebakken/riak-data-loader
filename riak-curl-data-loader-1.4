@@ -35,8 +35,8 @@ begin
         file.puts(object.to_s)
         file.flush
         file.fsync
-        curl_cmd = ['curl', '-vvv', '-H', 'Content-type: application/json', '-X', 'POST',
-                    "http://localhost:8098/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
+        curl_cmd = ['curl', '-s', '-H', 'Content-type: application/json', '-X', 'PUT',
+                    "http://localhost:10018/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
         system(*curl_cmd)
       ensure
         file.close
