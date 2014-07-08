@@ -11,6 +11,7 @@ require 'yajl'
 require 'twitter_auth'
 require 'twitter'
 require 'time'
+require 'yomama'
 
 begin
   object_count = Integer(ARGV[0])
