@@ -34,7 +34,7 @@ begin
     if object.is_a?(Twitter::Tweet)
 
       obj_h = object.to_h
-      id_s = object[:id].to_s
+      id_s = object.id.to_s
       obj_h[:created_at] = object.created_at.dup.utc.xmlschema.to_s
 
       Yajl::Encoder.encode(obj_h, $stdout, :pretty => false)
