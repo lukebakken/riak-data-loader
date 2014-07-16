@@ -1,55 +1,57 @@
 GIT
   remote: git://github.com/basho/riak-ruby-client.git
-  revision: 0f08013c312357338f66575103ccc73f99f39151
+  revision: b5619225b4dafb620a690a59fb433eeee4600fa3
   specs:
-    riak-client (1.4.0)
-      beefcake (~> 0.4.0)
+    riak-client (2.0.0.rc1)
+      beefcake (>= 1.0.0.pre1)
       i18n (>= 0.4.0)
       innertube (~> 1.0.2)
       multi_json (~> 1.0)
+      r509-cert-validator (~> 0.0.4)
 
 GIT
   remote: git://github.com/sferik/twitter.git
-  revision: ac246717557ea02565a1d93b3f9a975e7fd39874
+  revision: 48efb642beaa19355a4c1ba04a9fadac54cfba42
   branch: master
   specs:
-    twitter (5.5.1)
+    twitter (5.11.0)
       addressable (~> 2.3)
       buftok (~> 0.2.0)
-      descendants_tracker (~> 0.0.3)
       equalizer (~> 0.0.9)
-      faraday (>= 0.8, < 0.10)
-      http (~> 0.5.0)
+      faraday (~> 0.9.0)
+      http (~> 0.6.0)
       http_parser.rb (~> 0.6.0)
       json (~> 1.8)
       memoizable (~> 0.4.0)
+      naught (~> 1.0)
       simple_oauth (~> 0.2.0)
 
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.3.5)
-    atomic (1.1.14)
-    beefcake (0.4.0)
+    addressable (2.3.6)
+    beefcake (1.0.0.pre2)
     buftok (0.2.0)
-    descendants_tracker (0.0.3)
     equalizer (0.0.9)
-    faraday (0.8.9)
-      multipart-post (~> 1.2.0)
-    http (0.5.0)
-      http_parser.rb
+    faraday (0.9.0)
+      multipart-post (>= 1.2, < 3)
+    http (0.6.1)
+      http_parser.rb (~> 0.6.0)
     http_parser.rb (0.6.0)
-    i18n (0.6.9)
+    i18n (0.6.11)
     innertube (1.0.2)
     json (1.8.1)
-    memoizable (0.4.0)
-      thread_safe (~> 0.1.3)
-    multi_json (1.8.4)
-    multipart-post (1.2.0)
+    memoizable (0.4.2)
+      thread_safe (~> 0.3, >= 0.3.1)
+    multi_json (1.10.1)
+    multipart-post (2.0.0)
+    naught (1.0.0)
+    r509 (0.10.0)
+    r509-cert-validator (0.0.4)
+      r509 (~> 0.10.0)
     simple_oauth (0.2.0)
-    thread_safe (0.1.3)
-      atomic
-    yajl-ruby (1.2.0)
+    thread_safe (0.3.4)
+    yajl-ruby (1.2.1)
 
 PLATFORMS
   ruby
