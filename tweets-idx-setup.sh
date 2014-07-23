@@ -11,13 +11,16 @@ then
   exit 1
 fi
 
-curl -XPUT -iH 'Content-Type: application/xml' 'http://localhost:8098/search/schema/tweets-sch' --data-binary @twitter-schema.xml
+declare -i riak_port=10018
+riak_admin=~/Projects/basho/riak/dev/dev1/bin/riak-admin
+
+curl -XPUT -iH 'Content-Type: application/xml' "http://localhost:$riak_port/search/schema/tweets-sch" --data-binary @twitter-schema.xml
 sleep 5
 
-curl -XPUT -iH 'Content-Type: application/json' http://localhost:8098/search/index/tweets-idx -d '{"schema":"tweets-sch"}'
+curl -XPUT -iH 'Content-Type: application/json' "http://localhost:$riak_port/search/index/tweets-idx" -d '{"schema":"tweets-sch"}'
 sleep 10
 
-riak-admin bucket-type create tweets-type '{"props":{"search_index":"tweets-idx"}}'
+$riak_admin bucket-type create tweets-type '{"props":{"search_index":"tweets-idx"}}'
 sleep 5
 
-riak-admin bucket-type activate tweets-type
+$riak_admin bucket-type activate tweets-type

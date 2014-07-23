@@ -26,6 +26,7 @@ client = Twitter::Streaming::Client.new() do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
+riak_ports = [ 10018, 10028, 10038 ]
 stored = 0
 begin
   client.sample do |object|
@@ -37,13 +38,17 @@ begin
 
       obj_json = Yajl::Encoder.encode(obj_h)
 
+      # devrel ports 10018, 10028, 10038
+      port = riak_ports[stored % 3]
+
       file = Tempfile.new('riak-data-loader.', :encoding => 'utf-8')
       begin
         file.puts(obj_json)
         file.flush
         file.fsync
         curl_cmd = ['curl', '-H', 'Content-type: application/json', '-X', 'POST',
-                    "http://localhost:8098/types/tweets-type/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
+                    "http://localhost:#{port}/types/tweets-type/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
+        # $stderr.puts(curl_cmd.join(' '))
         system(*curl_cmd)
       ensure
         file.close
