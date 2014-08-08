@@ -28,7 +28,7 @@ begin
   client.sample do |object|
     if object.is_a?(Twitter::Tweet)
 
-      id_s = object[:id].to_s
+      id_s = object.id.to_s
 
       file = Tempfile.new('riak-data-loader.', :encoding => 'utf-8')
       begin
