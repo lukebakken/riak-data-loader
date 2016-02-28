@@ -1,24 +1,25 @@
 GIT
   remote: git://github.com/basho/riak-ruby-client.git
-  revision: 390262e5081f5ab75e39202b1689a67198471abb
+  revision: 53dc97f32078a80f57deaed9267deab98ba9c95b
   specs:
-    riak-client (2.1.0)
-      beefcake (~> 1.0)
+    riak-client (2.3.2)
+      beefcake (~> 1.1)
       cert_validator (~> 0.0.1)
-      i18n (>= 0.4.0)
+      i18n (>= 0.6.8)
       innertube (~> 1.0.2)
       multi_json (~> 1.0)
 
 GIT
   remote: git://github.com/sferik/twitter.git
-  revision: 798f0244f99d306c320890844e8cf966f382129c
+  revision: 1d12e149990ea57b42fadbb0e20cf8be35c6f41f
   branch: master
   specs:
-    twitter (5.13.0)
+    twitter (5.15.0)
       addressable (~> 2.3)
       buftok (~> 0.2.0)
-      equalizer (~> 0.0.9)
-      http (~> 0.6.0)
+      equalizer (~> 0.0.11)
+      http (~> 1.0)
+      http-form_data (~> 1.0)
       http_parser.rb (~> 0.6.0)
       memoizable (~> 0.4.0)
       multipart-post (~> 2.0)
@@ -28,23 +29,34 @@ GIT
 GEM
   remote: https://rubygems.org/
   specs:
-    addressable (2.3.6)
-    beefcake (1.0.0)
+    addressable (2.4.0)
+    beefcake (1.1.0)
     buftok (0.2.0)
     cert_validator (0.0.1)
-    equalizer (0.0.9)
-    http (0.6.3)
+    domain_name (0.5.20160216)
+      unf (>= 0.0.5, < 1.0.0)
+    equalizer (0.0.11)
+    http (1.0.2)
+      addressable (~> 2.3)
+      http-cookie (~> 1.0)
+      http-form_data (~> 1.0.1)
       http_parser.rb (~> 0.6.0)
+    http-cookie (1.0.2)
+      domain_name (~> 0.5)
+    http-form_data (1.0.1)
     http_parser.rb (0.6.0)
-    i18n (0.6.11)
+    i18n (0.7.0)
     innertube (1.0.2)
     memoizable (0.4.2)
       thread_safe (~> 0.3, >= 0.3.1)
-    multi_json (1.10.1)
+    multi_json (1.11.2)
     multipart-post (2.0.0)
-    naught (1.0.0)
-    simple_oauth (0.3.0)
-    thread_safe (0.3.4)
+    naught (1.1.0)
+    simple_oauth (0.3.1)
+    thread_safe (0.3.5)
+    unf (0.1.4)
+      unf_ext
+    unf_ext (0.0.7.2)
     yajl-ruby (1.2.1)
 
 PLATFORMS
@@ -54,3 +66,6 @@ DEPENDENCIES
   riak-client!
   twitter!
   yajl-ruby
+
+BUNDLED WITH
+   1.11.2

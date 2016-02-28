@@ -26,46 +26,47 @@ client = Twitter::Streaming::Client.new() do |config|
   config.access_token_secret = twauth.access_token_secret
 end
 
-riak_ports = [ 10018, 10028, 10038 ]
+riak_ports = [ 10018, 10028, 10038, 10048 ]
 stored = 0
-begin
-  client.sample do |object|
-    if object.is_a?(Twitter::Tweet)
+File.open('riak-curl-data-loader-keys.dat', 'w', :encoding => 'utf-8') do |keyfile|
+    begin
+    client.sample do |object|
+        if object.is_a?(Twitter::Tweet)
 
-      id_s = object.id.to_s
-      obj_h = object.to_h
-      obj_h[:created_at] = object.created_at.dup.utc.xmlschema.to_s
+        id_s = object.id.to_s
+        obj_h = object.to_h
+        obj_h[:created_at] = object.created_at.dup.utc.xmlschema.to_s
 
-      obj_json = Yajl::Encoder.encode(obj_h)
+        obj_json = Yajl::Encoder.encode(obj_h)
 
-      # devrel ports 10018, 10028, 10038
-      port = riak_ports[stored % 3]
+        port = riak_ports[stored % riak_ports.length]
 
-      file = Tempfile.new('riak-data-loader.', :encoding => 'utf-8')
-      begin
-        file.puts(obj_json)
-        file.flush
-        file.fsync
-        curl_cmd = ['curl', '-H', 'Content-type: application/json', '-X', 'POST',
-                    "http://localhost:#{port}/types/tweets-type/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
-        # $stderr.puts(curl_cmd.join(' '))
-        system(*curl_cmd)
-      ensure
-        file.close
-        file.unlink
-      end
+        file = Tempfile.new('riak-data-loader.', :encoding => 'utf-8')
+        begin
+            file.puts(obj_json)
+            file.flush
+            file.fsync
+            curl_cmd = ['curl', '-H', 'Content-type: application/json', '-X', 'POST',
+                        "http://localhost:#{port}/buckets/tweets/keys/#{id_s}", '--data-binary', "@#{file.path}"]
+            # $stderr.puts(curl_cmd.join(' '))
+            system(*curl_cmd)
+            keyfile.puts(id_s)
+        ensure
+            file.close
+            file.unlink
+        end
 
-      stored += 1
-      if (stored % 64 == 0)
-        puts("Stored #{stored} objects")
-      end
+        stored += 1
+        if (stored % 64 == 0)
+            puts("Stored #{stored} objects")
+        end
+        end
+        break if stored >= object_count
     end
-    break if stored >= object_count
-  end
-rescue Interrupt
-  puts("Exiting!")
-rescue => e
-  $stderr.puts("Exception: #{e}\n#{e.backtrace}")
-  retry
+    rescue Interrupt
+    puts("Exiting!")
+    rescue => e
+    $stderr.puts("Exception: #{e}\n#{e.backtrace}")
+    retry
+    end
 end
-
